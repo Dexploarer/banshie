@@ -1,0 +1,746 @@
+openapi: 3.0.3
+info:
+  title: Solana Trading Bot API
+  description: |
+    Complete OpenAPI specification for the Solana Trading Bot Convex backend.
+    
+    This API provides comprehensive trading, portfolio management, AI analysis, 
+    and automation features for Solana blockchain trading operations.
+    
+    ## Features
+    - 🔐 User authentication and management
+    - 📊 Real-time portfolio tracking
+    - 🤖 AI-powered trading signals
+    - 💰 Automated DCA strategies
+    - 🚨 Price and condition alerts
+    - 📈 Technical analysis and indicators
+    - 🔍 Vector-based AI search
+    - 🎨 Rich media generation
+    - 🌐 Multi-language support
+    
+    ## Authentication
+    All endpoints require user authentication through Telegram ID and user session tokens.
+    
+    ## Rate Limits
+    - Queries: 100 requests/minute per user
+    - Mutations: 60 requests/minute per user
+    - Actions: 30 requests/minute per user
+  version: 1.0.0
+  license:
+    name: MIT
+  contact:
+    name: Development Team
+    url: https://github.com/your-org/solana-trading-bot
+
+servers:
+  - url: https://your-convex-app.convex.site/api
+    description: Production Convex backend
+  - url: https://dev-convex-app.convex.site/api
+    description: Development Convex backend
+
+security:
+  - TelegramAuth: []
+
+paths:
+  # User Management
+  /query:
+    post:
+      summary: Execute Convex Query
+      description: Execute read-only queries against the Convex database
+      operationId: executeQuery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConvexRequest'
+            examples:
+              getUserProfile:
+                summary: Get user profile
+                value:
+                  path: "queries/users:getUserByTelegramId"
+                  args:
+                    telegramId: 123456789
+                  format: "json"
+              getPortfolio:
+                summary: Get user portfolio
+                value:
+                  path: "queries/portfolio:getPortfolio"
+                  args:
+                    userId: "user_123456789"
+                  format: "json"
+      responses:
+        '200':
+          description: Query executed successfully
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/UserProfile'
+                  - $ref: '#/components/schemas/PortfolioSummary'
+                  - $ref: '#/components/schemas/TradingSignal'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /mutation:
+    post:
+      summary: Execute Convex Mutation
+      description: Execute data-modifying operations against the Convex database
+      operationId: executeMutation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConvexRequest'
+            examples:
+              createUser:
+                summary: Create or update user
+                value:
+                  path: "mutations/users:createOrUpdateUser"
+                  args:
+                    telegramId: 123456789
+                    username: "trader_bot"
+                    isPremium: false
+                    settings:
+                      defaultSlippage: 1.0
+                      riskTolerance: "medium"
+                  format: "json"
+              placeTrade:
+                summary: Place a trade order
+                value:
+                  path: "mutations/trading:placeTrade"
+                  args:
+                    userId: "user_123456789"
+                    orderType: "market"
+                    tokenMint: "So11111111111111111111111111111111111111112"
+                    side: "buy"
+                    amount: "10.5"
+                    slippage: 1.0
+                  format: "json"
+      responses:
+        '200':
+          description: Mutation executed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    oneOf:
+                      - type: string
+                      - type: object
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /action:
+    post:
+      summary: Execute Convex Action
+      description: Execute external API calls and complex operations
+      operationId: executeAction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConvexRequest'
+            examples:
+              generateSignal:
+                summary: Generate AI trading signal
+                value:
+                  path: "actions/ai:generateTradingSignals"
+                  args:
+                    tokenMint: "So11111111111111111111111111111111111111112"
+                    analysisType: "technical"
+                  format: "json"
+              updatePrices:
+                summary: Update token prices
+                value:
+                  path: "actions/prices:updateTokenPrices"
+                  args:
+                    tokens: ["So11111111111111111111111111111111111111112"]
+                  format: "json"
+      responses:
+        '200':
+          description: Action executed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    TelegramAuth:
+      type: http
+      scheme: bearer
+      description: JWT token derived from Telegram authentication
+
+  schemas:
+    ConvexRequest:
+      type: object
+      required:
+        - path
+        - args
+        - format
+      properties:
+        path:
+          type: string
+          description: Convex function path (e.g., "queries/users:getUserById")
+          example: "queries/portfolio:getPortfolio"
+        args:
+          type: object
+          description: Function arguments
+          additionalProperties: true
+        format:
+          type: string
+          enum: ["json"]
+          default: "json"
+
+    UserProfile:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Unique user identifier
+        telegramId:
+          type: integer
+          format: int64
+          description: Telegram user ID
+        username:
+          type: string
+          description: Telegram username
+        isPremium:
+          type: boolean
+          description: Premium user status
+        settings:
+          $ref: '#/components/schemas/UserSettings'
+        walletAddress:
+          type: string
+          description: Primary Solana wallet address
+        createdAt:
+          type: integer
+          format: int64
+          description: Account creation timestamp
+        lastActive:
+          type: integer
+          format: int64
+          description: Last activity timestamp
+
+    UserSettings:
+      type: object
+      properties:
+        defaultSlippage:
+          type: number
+          minimum: 0.1
+          maximum: 10.0
+          default: 1.0
+          description: Default slippage tolerance percentage
+        riskTolerance:
+          type: string
+          enum: ["low", "medium", "high"]
+          default: "medium"
+        notifications:
+          type: boolean
+          default: true
+        language:
+          type: string
+          default: "en"
+          description: User interface language
+        autoTrade:
+          type: boolean
+          default: false
+          description: Enable automatic trading on signals
+
+    PortfolioSummary:
+      type: object
+      properties:
+        userId:
+          type: string
+          description: User identifier
+        totalValue:
+          type: string
+          description: Total portfolio value in USD
+        totalPnL:
+          type: string
+          description: Total profit/loss in USD
+        totalPnLPercentage:
+          type: string
+          description: Total P&L as percentage
+        positionCount:
+          type: integer
+          description: Number of positions
+        positions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Position'
+        lastUpdated:
+          type: integer
+          format: int64
+
+    Position:
+      type: object
+      properties:
+        tokenMint:
+          type: string
+          description: Token mint address
+        symbol:
+          type: string
+          description: Token symbol
+        balance:
+          type: string
+          description: Token balance
+        valueUsd:
+          type: string
+          description: Position value in USD
+        avgCost:
+          type: string
+          description: Average cost basis
+        pnl:
+          type: string
+          description: Position P&L in USD
+        pnlPercentage:
+          type: string
+          description: Position P&L percentage
+
+    TradingSignal:
+      type: object
+      properties:
+        _id:
+          type: string
+        tokenMint:
+          type: string
+          description: Token mint address
+        symbol:
+          type: string
+          description: Token symbol
+        signalType:
+          type: string
+          enum: ["buy", "sell", "hold"]
+        strength:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Signal strength (0-1)
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: AI confidence level (0-1)
+        reasoning:
+          type: string
+          description: AI reasoning for the signal
+        indicators:
+          type: object
+          description: Technical indicators used
+        timestamp:
+          type: integer
+          format: int64
+        validUntil:
+          type: integer
+          format: int64
+        metadata:
+          type: object
+          additionalProperties: true
+
+    OrderRequest:
+      type: object
+      required:
+        - userId
+        - orderType
+        - tokenMint
+        - side
+        - amount
+      properties:
+        userId:
+          type: string
+        orderType:
+          type: string
+          enum: ["market", "limit"]
+        tokenMint:
+          type: string
+          description: Token mint address
+        side:
+          type: string
+          enum: ["buy", "sell"]
+        amount:
+          type: string
+          description: Amount to trade
+        price:
+          type: string
+          description: Limit price (required for limit orders)
+        slippage:
+          type: number
+          minimum: 0.1
+          maximum: 10.0
+          description: Slippage tolerance percentage
+
+    OrderStatus:
+      type: object
+      properties:
+        orderId:
+          type: string
+        status:
+          type: string
+          enum: ["pending", "executing", "completed", "failed", "cancelled"]
+        txHash:
+          type: string
+          description: Transaction hash
+        fillPrice:
+          type: string
+          description: Executed price
+        fillAmount:
+          type: string
+          description: Executed amount
+        fees:
+          type: string
+          description: Transaction fees
+        createdAt:
+          type: integer
+          format: int64
+        updatedAt:
+          type: integer
+          format: int64
+        error:
+          type: string
+          description: Error message if failed
+
+    TokenPrice:
+      type: object
+      properties:
+        mint:
+          type: string
+        symbol:
+          type: string
+        price:
+          type: string
+          description: Current price in USD
+        change24h:
+          type: string
+          description: 24h price change
+        changePercentage24h:
+          type: string
+          description: 24h price change percentage
+        volume24h:
+          type: string
+          description: 24h trading volume
+        marketCap:
+          type: string
+          description: Market capitalization
+        lastUpdated:
+          type: integer
+          format: int64
+
+    DCAStrategy:
+      type: object
+      properties:
+        _id:
+          type: string
+        userId:
+          type: string
+        fromMint:
+          type: string
+          description: Source token mint
+        toMint:
+          type: string
+          description: Target token mint
+        amount:
+          type: string
+          description: Amount per execution
+        frequency:
+          type: string
+          enum: ["hourly", "daily", "weekly", "monthly"]
+        enabled:
+          type: boolean
+        nextExecution:
+          type: integer
+          format: int64
+        totalInvested:
+          type: string
+          description: Total amount invested
+        totalReceived:
+          type: string
+          description: Total tokens received
+        executionCount:
+          type: integer
+        conditions:
+          type: object
+          description: Execution conditions
+        createdAt:
+          type: integer
+          format: int64
+
+    Alert:
+      type: object
+      properties:
+        _id:
+          type: string
+        userId:
+          type: string
+        alertType:
+          type: string
+          enum: ["price", "volume", "technical", "portfolio"]
+        tokenMint:
+          type: string
+        conditions:
+          type: object
+          description: Alert trigger conditions
+        enabled:
+          type: boolean
+        triggered:
+          type: boolean
+        lastTriggered:
+          type: integer
+          format: int64
+        createdAt:
+          type: integer
+          format: int64
+
+    TechnicalIndicators:
+      type: object
+      properties:
+        tokenMint:
+          type: string
+        rsi:
+          type: number
+          description: Relative Strength Index
+        macd:
+          type: object
+          properties:
+            value:
+              type: number
+            signal:
+              type: number
+            histogram:
+              type: number
+        movingAverages:
+          type: object
+          properties:
+            sma20:
+              type: number
+            sma50:
+              type: number
+            ema20:
+              type: number
+        bollinger:
+          type: object
+          properties:
+            upper:
+              type: number
+            middle:
+              type: number
+            lower:
+              type: number
+        volume:
+          type: object
+          properties:
+            current:
+              type: number
+            average:
+              type: number
+        timestamp:
+          type: integer
+          format: int64
+
+    AIAnalysis:
+      type: object
+      properties:
+        tokenMint:
+          type: string
+        analysisType:
+          type: string
+          enum: ["sentiment", "technical", "fundamental", "composite"]
+        sentiment:
+          type: object
+          properties:
+            score:
+              type: number
+              minimum: -1
+              maximum: 1
+            confidence:
+              type: number
+            sources:
+              type: array
+              items:
+                type: string
+        signals:
+          type: array
+          items:
+            $ref: '#/components/schemas/TradingSignal'
+        recommendations:
+          type: array
+          items:
+            type: string
+        riskAssessment:
+          type: object
+          properties:
+            level:
+              type: string
+              enum: ["low", "medium", "high"]
+            factors:
+              type: array
+              items:
+                type: string
+        timestamp:
+          type: integer
+          format: int64
+
+    VectorSearchResult:
+      type: object
+      properties:
+        documents:
+          type: array
+          items:
+            type: object
+            properties:
+              content:
+                type: string
+              metadata:
+                type: object
+              score:
+                type: number
+        query:
+          type: string
+        totalResults:
+          type: integer
+
+    RichMedia:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["chart", "infographic", "report"]
+        format:
+          type: string
+          enum: ["png", "jpg", "pdf", "svg"]
+        url:
+          type: string
+          description: URL to generated media
+        metadata:
+          type: object
+          properties:
+            tokenMint:
+              type: string
+            timeframe:
+              type: string
+            indicators:
+              type: array
+              items:
+                type: string
+        createdAt:
+          type: integer
+          format: int64
+
+    APIError:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+        code:
+          type: string
+          description: Error code
+        details:
+          type: object
+          additionalProperties: true
+        timestamp:
+          type: integer
+          format: int64
+
+  responses:
+    BadRequest:
+      description: Bad request - invalid parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/APIError'
+          example:
+            error: "Invalid request parameters"
+            code: "INVALID_PARAMS"
+            timestamp: 1640995200
+
+    Unauthorized:
+      description: Unauthorized - invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/APIError'
+          example:
+            error: "Authentication required"
+            code: "UNAUTHORIZED"
+            timestamp: 1640995200
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/APIError'
+          example:
+            error: "Resource not found"
+            code: "NOT_FOUND"
+            timestamp: 1640995200
+
+    RateLimited:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/APIError'
+          example:
+            error: "Rate limit exceeded"
+            code: "RATE_LIMITED"
+            timestamp: 1640995200
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/APIError'
+          example:
+            error: "Internal server error"
+            code: "INTERNAL_ERROR"
+            timestamp: 1640995200
+
+# Example usage patterns
+externalDocs:
+  description: Full API Documentation
+  url: https://docs.your-domain.com/api
+
+# Tags for organization
+tags:
+  - name: Users
+    description: User management operations
+  - name: Portfolio
+    description: Portfolio tracking and management
+  - name: Trading
+    description: Trading operations and order management
+  - name: AI
+    description: AI analysis and trading signals
+  - name: Prices
+    description: Price data and market information
+  - name: DCA
+    description: Dollar-cost averaging strategies
+  - name: Alerts
+    description: Price and condition alerts
+  - name: Analytics
+    description: Technical analysis and indicators
+  - name: Search
+    description: Vector-based AI search
+  - name: Media
+    description: Rich media generation

@@ -1,0 +1,59 @@
+{
+  "name": "solana-trading-bot",
+  "version": "0.1.0",
+  "description": "Non-custodial Solana trading bot with Telegram Mini App",
+  "private": true,
+  "scripts": {
+    "dev": "cargo run",
+    "dev:frontend": "cd mini-app && npm run dev",
+    "dev:full": "concurrently \"cargo run\" \"cd mini-app && npm run dev\"",
+    "dev:watch": "cargo watch -x run",
+    "build": "cargo build --release",
+    "build:frontend": "cd mini-app && npm run build",
+    "build:all": "npm run build && npm run build:frontend",
+    "test": "cargo test",
+    "test:frontend": "cd mini-app && npm run type-check && npm run lint",
+    "test:all": "npm run test && npm run test:frontend",
+    "lint": "cargo clippy --all-targets --all-features -- -D warnings",
+    "lint:frontend": "cd mini-app && npm run lint",
+    "lint:fix": "cargo clippy --fix --allow-dirty && cd mini-app && npm run lint:fix",
+    "lint:all": "npm run lint && npm run lint:frontend",
+    "format": "cargo fmt --all",
+    "format:frontend": "cd mini-app && npm run format",
+    "format:all": "npm run format && npm run format:frontend",
+    "check": "cargo check --all-targets --all-features",
+    "clean": "cargo clean && cd mini-app && rm -rf dist node_modules",
+    "setup": "npm run setup:rust && npm run setup:frontend && npm run setup:git",
+    "setup:rust": "rustup update && cargo install cargo-watch",
+    "setup:frontend": "cd mini-app && npm install",
+    "setup:git": "pre-commit install",
+    "validate": "npm run check && npm run test:all && npm run lint:all",
+    "docker:build": "docker build -t solana-trading-bot .",
+    "docker:run": "docker-compose up",
+    "docker:dev": "docker-compose up --build",
+    "tunnel": "cd mini-app && npx ngrok http 3000",
+    "deploy": "npm run build:all",
+    "docs": "cargo doc --open",
+    "audit": "cargo audit",
+    "update": "cargo update && cd mini-app && npm update"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0",
+    "pre-commit": "^1.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "keywords": [
+    "solana",
+    "trading",
+    "telegram",
+    "bot",
+    "crypto",
+    "defi",
+    "non-custodial"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}

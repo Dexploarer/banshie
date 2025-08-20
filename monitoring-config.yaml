@@ -1,0 +1,206 @@
+# Solana Trading Bot - Monitoring Configuration
+
+telemetry:
+  service_name: "solana-trading-bot"
+  service_version: "0.2.0"
+  environment: "production"
+  # Optional: OTLP endpoint for external telemetry
+  # otlp_endpoint: "http://localhost:4317"
+  # jaeger_endpoint: "http://localhost:14268/api/traces"
+  sampling_rate: 0.1
+  batch_timeout_seconds: 5
+  max_export_batch_size: 512
+  enable_console: true
+  enable_file_logging: true
+  log_level: "info"
+
+dashboard:
+  host: "127.0.0.1"
+  port: 3000
+  enable_cors: true
+  metrics_path: "/metrics"
+  health_path: "/health"
+  dashboard_path: "/dashboard"
+
+health_checks:
+  interval_seconds: 30
+  components:
+    database:
+      check_interval_seconds: 60
+      timeout_seconds: 10
+      retries: 3
+      critical: true
+    
+    redis_cache:
+      check_interval_seconds: 30
+      timeout_seconds: 5
+      retries: 2
+      critical: false
+    
+    solana_rpc:
+      check_interval_seconds: 30
+      timeout_seconds: 10
+      retries: 3
+      critical: true
+    
+    jupiter_api:
+      check_interval_seconds: 60
+      timeout_seconds: 15
+      retries: 2
+      critical: true
+    
+    telegram_bot:
+      check_interval_seconds: 60
+      timeout_seconds: 10
+      retries: 3
+      critical: true
+    
+    trading_engine:
+      check_interval_seconds: 30
+      timeout_seconds: 5
+      retries: 2
+      critical: true
+    
+    mev_protection:
+      check_interval_seconds: 60
+      timeout_seconds: 10
+      retries: 2
+      critical: false
+
+alerts:
+  rules:
+    # Trading alerts
+    - id: "trading_failure_rate"
+      name: "High Trading Failure Rate"
+      description: "Trading failure rate is above 10%"
+      metric: "trading_failure_rate"
+      condition: "greater_than"
+      threshold: 0.1
+      severity: "warning"
+      enabled: true
+      cooldown_minutes: 15
+      notification_channels:
+        - type: "console"
+        # - type: "telegram"
+        #   chat_id: "YOUR_CHAT_ID"
+        #   bot_token: "YOUR_BOT_TOKEN"
+    
+    - id: "low_wallet_balance"
+      name: "Low Wallet Balance"
+      description: "Main wallet balance is below 0.1 SOL"
+      metric: "wallet_balance_sol"
+      condition: "less_than"
+      threshold: 0.1
+      severity: "warning"
+      enabled: true
+      cooldown_minutes: 60
+      notification_channels:
+        - type: "console"
+    
+    - id: "high_error_rate"
+      name: "High Error Rate"
+      description: "System error rate is above 5%"
+      metric: "error_rate"
+      condition: "greater_than"
+      threshold: 0.05
+      severity: "critical"
+      enabled: true
+      cooldown_minutes: 5
+      notification_channels:
+        - type: "console"
+    
+    - id: "mev_protection_failure"
+      name: "MEV Protection Failure"
+      description: "MEV protection success rate below 80%"
+      metric: "mev_success_rate"
+      condition: "less_than"
+      threshold: 0.8
+      severity: "warning"
+      enabled: true
+      cooldown_minutes: 30
+      notification_channels:
+        - type: "console"
+    
+    # System alerts
+    - id: "high_memory_usage"
+      name: "High Memory Usage"
+      description: "Memory usage above 85%"
+      metric: "memory_usage_percent"
+      condition: "greater_than"
+      threshold: 0.85
+      severity: "warning"
+      enabled: true
+      cooldown_minutes: 10
+      notification_channels:
+        - type: "console"
+    
+    - id: "high_cpu_usage"
+      name: "High CPU Usage"
+      description: "CPU usage above 90%"
+      metric: "cpu_usage_percent"
+      condition: "greater_than"
+      threshold: 0.9
+      severity: "critical"
+      enabled: true
+      cooldown_minutes: 5
+      notification_channels:
+        - type: "console"
+
+# Metrics retention and cleanup
+metrics:
+  retention_hours: 720  # 30 days
+  cleanup_interval_hours: 24
+  max_custom_metrics: 1000
+
+# Notification channels configuration
+notifications:
+  telegram:
+    enabled: false
+    # bot_token: "YOUR_BOT_TOKEN"
+    # default_chat_id: "YOUR_CHAT_ID"
+  
+  discord:
+    enabled: false
+    # webhook_url: "YOUR_DISCORD_WEBHOOK"
+  
+  slack:
+    enabled: false
+    # webhook_url: "YOUR_SLACK_WEBHOOK"
+  
+  email:
+    enabled: false
+    # smtp_host: "smtp.gmail.com"
+    # smtp_port: 587
+    # username: "your-email@gmail.com"
+    # password: "your-app-password"
+    # from_address: "solana-bot@yourcompany.com"
+    # default_recipients:
+    #   - "admin@yourcompany.com"
+
+# Prometheus integration
+prometheus:
+  enabled: true
+  namespace: "solana_trading_bot"
+  subsystem: ""
+  
+# OpenTelemetry integration
+opentelemetry:
+  enabled: true
+  traces:
+    enabled: true
+    exporter: "console"  # Options: console, jaeger, otlp
+  
+  metrics:
+    enabled: true
+    exporter: "prometheus"  # Options: prometheus, otlp
+  
+  logs:
+    enabled: true
+    exporter: "console"  # Options: console, otlp
+
+# Performance monitoring
+performance:
+  enable_profiling: false
+  profile_interval_seconds: 60
+  enable_heap_profiling: false
+  enable_cpu_profiling: false

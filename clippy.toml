@@ -1,0 +1,64 @@
+# Clippy configuration
+# Documentation: https://doc.rust-lang.org/clippy/configuration.html
+
+# Cognitive complexity threshold
+cognitive-complexity-threshold = 30
+
+# Documentation requirements
+missing-docs-in-crate-items = true
+
+# String literal length threshold 
+max-literal-length = 120
+
+# Function parameter count threshold
+too-many-arguments-threshold = 8
+
+# Struct field count threshold
+struct-excessive-bools-threshold = 4
+
+# Enum variant count threshold
+enum-variant-size-threshold = 200
+
+# Vec capacity threshold
+vec-alloc-threshold = 512000
+
+# Stack size threshold
+stack-size-threshold = 512000
+
+# Avoid certain names
+avoid-breaking-exported-api = true
+allow-expect-in-tests = true
+allow-unwrap-in-tests = true
+warn-on-all-wildcard-imports = false
+disallowed-names = ["foo", "baz", "quux", "lorem", "ipsum"]
+
+# Type complexity threshold
+type-complexity-threshold = 250
+
+# Blacklisted types
+disallowed-types = [
+    "std::collections::HashMap",  # Prefer IndexMap for deterministic iteration
+]
+
+# Allowed numeric literals
+literal-representation-threshold = 10
+
+# Allow certain lints for specific functions
+allow-print-in-tests = true
+allow-dbg-in-tests = true
+
+# Module inception depth
+max-trait-bounds = 3
+
+# Arithmetic side effects
+arithmetic-side-effects-allowed = [
+    "*",
+    "+", 
+    "-"
+]
+
+# Single char lifetime names
+single-char-lifetime-names = ["a", "b", "c"]
+
+# Suppress specific lints for macro-generated code
+suppress-restriction-lint-in-const = true
